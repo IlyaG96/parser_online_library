@@ -1,5 +1,6 @@
 import requests
 
+
 def download_book():
     url = "http://tululu.org/txt.php?id=32168"
     response = requests.get(url, verify=False)
