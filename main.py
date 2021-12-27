@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 
 
-def parse_books_description(book_id, url):
+def get_page_content(book_id, url):
 
     address = f"{url}/b{book_id}/"
     response = requests.get(address, verify=False, allow_redirects=False)
@@ -14,14 +14,33 @@ def parse_books_description(book_id, url):
     if response.is_redirect:
         raise requests.HTTPError
 
-    content = BeautifulSoup(response.text, 'lxml')
-    header = content.find("div", {"id": "content"}).find('h1').text
-    book_title = 0
-    book_author = 1
-    title = header.split("::")[book_title].strip()
-    author = header.split("::")[book_author].strip()
+    page_content = BeautifulSoup(response.text, 'lxml')
 
-    return f"'{title}'-{author}"
+    return page_content
+
+
+def parse_book_author(page_content):
+    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
+    book_author = 1
+    author = header[book_author].strip()
+
+    return author
+
+
+def parse_book_title(page_content):
+
+    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
+    book_title = 0
+    title = header[book_title].strip()
+
+    return title
+
+
+def parse_cover_link(page_content, url):
+
+    picture_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
+
+    return f"{url}{picture_link}"
 
 
 def download_txt(url, filename, book_path, book_id):
@@ -39,9 +58,13 @@ def download_txt(url, filename, book_path, book_id):
         file.write(book)
 
 
+def download_books_covers(cover_link, book_path, book_id):
 
-def parse_books_imgs():
-    pass
+    response = requests.get(cover_link)
+    response.raise_for_status()
+
+    with open(file=f"{book_path}/{book_id}.jpg", mode="wb") as file:
+        file.write(response.content)
 
 
 def main():
@@ -52,8 +75,12 @@ def main():
 
     for book_id in range(1, 11):
         try:
-            filename = parse_books_description(book_id, url)
-            download_txt(url, filename, book_path, book_id)
+            page_content = get_page_content(book_id, url)
+            title = parse_book_title(page_content)
+            author = parse_book_author(page_content)
+            cover_link = parse_cover_link(page_content, url)
+#           download_txt(url, filename, book_path, book_id)
+            download_books_covers(cover_link, book_path, book_id)
         except requests.HTTPError:
             continue
 
