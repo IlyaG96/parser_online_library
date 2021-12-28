@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 from environs import Env
 import requests
 from lxml import html
+
+
 def get_page_content(book_id, url):
 
     address = f"{url}/b{book_id}/"
@@ -22,9 +24,9 @@ def get_page_content(book_id, url):
 def parse_book_comments(page_content):
     comments = page_content.find("div", {"id": "content"}).find_all("span", {"class": "black"})
     if comments:
-        for comment in comments:
-            comment = html.document_fromstring(str(comment)).text_content()
-            print(comment)
+        comments = [html.document_fromstring(str(comment)).text_content() for comment in comments]
+
+    return comments
 
 
 def parse_book_author(page_content):
@@ -44,17 +46,18 @@ def parse_book_title(page_content):
     return title
 
 
-def parse_cover_link(page_content, url):
+def parse_cover_link(page_content):
 
     picture_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
 
-    return f"{url}{picture_link}"
+    return picture_link
 
 
-def download_books_covers(cover_link, covers_path):
+def download_books_covers(url, cover_link, covers_path):
 
+    address = f"{url}{cover_link}"
     book_id = 2
-    response = requests.get(cover_link)
+    response = requests.get(address)
     response.raise_for_status()
 
     cover_name = urlparse(cover_link).path.split("/")[book_id]
@@ -95,10 +98,10 @@ def main():
             page_content = get_page_content(book_id, url)
        #     title = parse_book_title(page_content)
        #     author = parse_book_author(page_content)
-       #     cover_link = parse_cover_link(page_content, url)
+            cover_link = parse_cover_link(page_content)
             comments = parse_book_comments(page_content)
 #           download_txt(url, filename, book_path, book_id)
-       #     download_books_covers(cover_link, covers_path)
+            download_books_covers(url, cover_link, covers_path)
         except requests.HTTPError:
             continue
 
