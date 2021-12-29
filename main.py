@@ -3,8 +3,8 @@ from pathlib import Path, PurePath
 from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from environs import Env
-import requests
 from lxml import html
+import requests
 
 
 def get_page_content(book_id, url):
@@ -22,6 +22,7 @@ def get_page_content(book_id, url):
 
 
 def parse_book_comments(page_content):
+
     comments = page_content.find("div", {"id": "content"}).find_all("span", {"class": "black"})
     if comments:
         comments = [html.document_fromstring(str(comment)).text_content() for comment in comments]
@@ -30,6 +31,7 @@ def parse_book_comments(page_content):
 
 
 def parse_book_author(page_content):
+
     header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
     book_author = 1
     author = header[book_author].strip()
@@ -42,7 +44,6 @@ def parse_book_title(page_content):
     header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
     book_title = 0
     title = header[book_title].strip()
-    print(title)
 
     return title
 
@@ -57,7 +58,6 @@ def parse_cover_link(page_content):
 def parse_genre(page_content):
 
     genres = page_content.select("#content > span >a")
-
     genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
 
     return genres
@@ -80,8 +80,8 @@ def download_books_covers(url, cover_link, covers_path):
 
 
 def download_txt(url, filename, book_path, book_id):
-    filename = sanitize_filename(filename)
 
+    filename = sanitize_filename(filename)
     address = f"{url}/txt.php?id={book_id}"
     response = requests.get(address, verify=False, allow_redirects=False)
     response.raise_for_status()
@@ -92,6 +92,20 @@ def download_txt(url, filename, book_path, book_id):
     path_to_file = PurePath(book_path, filename)
     with open(file=f"{path_to_file}.txt", mode="wb") as file:
         file.write(book)
+
+
+def collect_book_info(title, author, cover_link, comments, genre):
+
+    book_info = {
+        title: {
+            "author": author,
+            "cover_link": cover_link,
+            "comments": comments,
+            "genre": genre
+        }
+    }
+
+    return book_info
 
 
 def main():
@@ -107,12 +121,12 @@ def main():
         try:
             page_content = get_page_content(book_id, url)
             title = parse_book_title(page_content)
-       #     author = parse_book_author(page_content)
-       #     cover_link = parse_cover_link(page_content)
-            comments = parse_book_comments(page_content)
-#           download_txt(url, filename, book_path, book_id)
-        #    download_books_covers(url, cover_link, covers_path)
+            author = parse_book_author(page_content)
             genre = parse_genre(page_content)
+            comments = parse_book_comments(page_content)
+            cover_link = parse_cover_link(page_content)
+            download_txt(url, title, book_path, book_id)
+            download_books_covers(url, cover_link, covers_path)
         except requests.HTTPError:
             continue
 
