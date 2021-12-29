@@ -42,6 +42,7 @@ def parse_book_title(page_content):
     header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
     book_title = 0
     title = header[book_title].strip()
+    print(title)
 
     return title
 
@@ -51,6 +52,15 @@ def parse_cover_link(page_content):
     picture_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
 
     return picture_link
+
+
+def parse_genre(page_content):
+
+    genres = page_content.select("#content > span >a")
+
+    genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
+
+    return genres
 
 
 def download_books_covers(url, cover_link, covers_path):
@@ -96,12 +106,13 @@ def main():
     for book_id in range(1, 11):
         try:
             page_content = get_page_content(book_id, url)
-       #     title = parse_book_title(page_content)
+            title = parse_book_title(page_content)
        #     author = parse_book_author(page_content)
-            cover_link = parse_cover_link(page_content)
+       #     cover_link = parse_cover_link(page_content)
             comments = parse_book_comments(page_content)
 #           download_txt(url, filename, book_path, book_id)
-            download_books_covers(url, cover_link, covers_path)
+        #    download_books_covers(url, cover_link, covers_path)
+            genre = parse_genre(page_content)
         except requests.HTTPError:
             continue
 
