@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from environs import Env
 from lxml import html
+from pprint import pprint
 import argparse
 import requests
 
@@ -112,14 +113,14 @@ def collect_book_info(title, author, cover_link, comments, genre):
 def main():
     env = Env()
     env.read_env()
-    book_path = env.str("book_path")
-    covers_path = env.str("covers_path")
+    book_path = env.str("book_path", default="./books")
+    covers_path = env.str("covers_path", default="./covers")
     url = "http://tululu.org"
+
     Path(book_path).mkdir(parents=True, exist_ok=True)
     Path(covers_path).mkdir(parents=True, exist_ok=True)
-    parser = argparse.ArgumentParser(
-        description='Введите id книг (начальный и конечный)'
-    )
+
+    parser = argparse.ArgumentParser(description='Введите id книг (начальный и конечный)')
     parser.add_argument('start_id',
                         help='Номер (id) первой книги',
                         type=int,
@@ -130,7 +131,13 @@ def main():
                         type=int,
                         default=11,
                         nargs='?')
-    start_id, stop_id = parser.parse_args().stop_id, parser.parse_args().start_id
+    parser.add_argument('show_info',
+                        help='отображение информации о книге (любое число)',
+                        type=int,
+                        default=0,
+                        nargs='?')
+    args = parser.parse_args()
+    start_id, stop_id, show_info = args.start_id, args.stop_id, args.show_info
 
     for book_id in range(start_id, stop_id):
         try:
@@ -142,7 +149,8 @@ def main():
             cover_link = parse_cover_link(page_content)
             download_txt(url, title, book_path, book_id)
             download_books_covers(url, cover_link, covers_path)
-            print(collect_book_info(title, author, genre, comments, cover_link))
+            if show_info:
+                pprint(collect_book_info(title, author, cover_link, comments, genre), width=150)
         except requests.HTTPError:
             continue
 
