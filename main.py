@@ -50,11 +50,11 @@ def parse_book_title(page_content):
     return title
 
 
-def parse_cover_link(page_content):
+def parse_cover_link(page_content, url):
 
-    picture_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
+    cover_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
 
-    return picture_link
+    return f"{url}{cover_link}"
 
 
 def parse_genre(page_content):
@@ -65,9 +65,9 @@ def parse_genre(page_content):
     return genres
 
 
-def download_books_covers(url, cover_link, covers_path):
+def download_books_covers(cover_link, covers_path):
 
-    address = f"{url}{cover_link}"
+    address = cover_link
     book_id = 2
     response = requests.get(address)
     response.raise_for_status()
@@ -146,9 +146,9 @@ def main():
             author = parse_book_author(page_content)
             genre = parse_genre(page_content)
             comments = parse_book_comments(page_content)
-            cover_link = parse_cover_link(page_content)
+            cover_link = parse_cover_link(page_content, url)
             download_txt(url, title, book_path, book_id)
-            download_books_covers(url, cover_link, covers_path)
+            download_books_covers(cover_link, covers_path)
             if show_info:
                 pprint(collect_book_info(title, author, cover_link, comments, genre), width=150)
         except requests.HTTPError:
