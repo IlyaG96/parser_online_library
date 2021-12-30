@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from environs import Env
 from lxml import html
 from pprint import pprint
+from tqdm import tqdm
 import argparse
 import requests
 
@@ -138,8 +139,9 @@ def main():
                         nargs='?')
     args = parser.parse_args()
     start_id, stop_id, show_info = args.start_id, args.stop_id, args.show_info
-
+    progress_bar = tqdm(total=stop_id-start_id)
     for book_id in range(start_id, stop_id):
+        progress_bar.update(1)
         try:
             page_content = get_page_content(book_id, url)
             title = parse_book_title(page_content)
