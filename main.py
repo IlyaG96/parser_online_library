@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from environs import Env
 from lxml import html
+import argparse
 import requests
 
 
@@ -116,8 +117,22 @@ def main():
     url = "http://tululu.org"
     Path(book_path).mkdir(parents=True, exist_ok=True)
     Path(covers_path).mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(
+        description='Введите id книг (начальный и конечный)'
+    )
+    parser.add_argument('start_id',
+                        help='Номер (id) первой книги',
+                        type=int,
+                        default=1,
+                        nargs='?')
+    parser.add_argument('stop_id',
+                        help='Номер (id) последней книги',
+                        type=int,
+                        default=11,
+                        nargs='?')
+    start_id, stop_id = parser.parse_args().stop_id, parser.parse_args().start_id
 
-    for book_id in range(1, 11):
+    for book_id in range(start_id, stop_id):
         try:
             page_content = get_page_content(book_id, url)
             title = parse_book_title(page_content)
@@ -127,6 +142,7 @@ def main():
             cover_link = parse_cover_link(page_content)
             download_txt(url, title, book_path, book_id)
             download_books_covers(url, cover_link, covers_path)
+            print(collect_book_info(title, author, genre, comments, cover_link))
         except requests.HTTPError:
             continue
 
