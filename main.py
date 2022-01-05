@@ -138,9 +138,8 @@ def main():
                         default=0,
                         nargs='?')
     args = parser.parse_args()
-    start_id, stop_id, show_info = args.start_id, args.stop_id, args.show_info
-    progress_bar = tqdm(total=stop_id-start_id)
-    for book_id in range(start_id, stop_id):
+    progress_bar = tqdm(total=args.stop_id-args.start_id)
+    for book_id in range(args.start_id, args.stop_id):
         progress_bar.update(1)
         try:
             page_content = get_page_content(book_id, url)
@@ -151,7 +150,7 @@ def main():
             cover_link = parse_cover_link(page_content, url)
             download_txt(url, title, book_path, book_id)
             download_books_covers(cover_link, covers_path)
-            if show_info:
+            if args.show_info:
                 pprint(collect_book_info(title, author, cover_link, comments, genre), width=150)
         except requests.HTTPError:
             continue
