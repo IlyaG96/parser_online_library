@@ -69,10 +69,19 @@ def download_txt(title, book_path, book_id):
         raise requests.HTTPError
 
     book = response.text
-    path_to_file = Path(book_path, title)
+    book_title = f"{title}.txt"
+    path_to_file = Path(book_path, book_title)
 
-    with open(file=f"{path_to_file}.txt", mode="w") as file:
+    with open(file=path_to_file, mode="w") as file:
         file.write(book)
+
+
+def is_book_exist(title, book_path):
+
+    book_title = f"{title}.txt"
+    path_to_book = Path(book_path, book_title)
+
+    return path_to_book.is_file()
 
 
 def collect_book_info(title, cover_link, page_content):
@@ -85,8 +94,8 @@ def collect_book_info(title, cover_link, page_content):
     genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
 
     header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
-    book_author = 1
-    author = header[book_author].strip()
+    book_author_index = 1
+    author = header[book_author_index].strip()
 
     book_info = {
         title: {
@@ -120,11 +129,11 @@ def main():
                         type=int,
                         default=11,
                         nargs='?')
-    parser.add_argument('show_info',
-                        help='отображение информации о книге (любое число)',
-                        type=int,
-                        default=0,
-                        nargs='?')
+    parser.add_argument('-v',
+                        '--show',
+                        help='отображение информации о книге',
+                        type=bool,
+                        default=False)
     args = parser.parse_args()
     progress_bar = tqdm(total=args.stop_id-args.start_id)
     for book_id in range(args.start_id, args.stop_id):
@@ -132,10 +141,12 @@ def main():
         try:
             page_content = get_page_content(book_id)
             title = parse_book_title(page_content)
+            if is_book_exist(title, book_path):
+                continue
             cover_link = parse_cover_link(page_content)
             download_txt(title, book_path, book_id)
             download_books_covers(cover_link, covers_path)
-            if args.show_info:
+            if args.show:
                 pprint(collect_book_info(title, cover_link, page_content), width=150)
         except requests.HTTPError:
             continue
