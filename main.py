@@ -27,8 +27,9 @@ def get_page_content(book_id):
 def parse_book_title(page_content):
 
     header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
-    book_title = 0
-    title = header[book_title].strip()
+    book_title_index = 0
+    title = header[book_title_index].strip()
+    title = sanitize_filename(title)
 
     return title
 
@@ -48,14 +49,13 @@ def download_books_covers(cover_link, covers_path):
     cover_name = os.path.split(cover_link)[book_title_index]
     path_to_file = Path(covers_path, cover_name)
 
-    if not Path(path_to_file).is_file():
+    if not path_to_file.is_file():
         with open(file=path_to_file, mode="wb") as file:
             file.write(response.content)
 
 
-def download_txt(filename, book_path, book_id):
+def download_txt(title, book_path, book_id):
 
-    filename = sanitize_filename(filename)
     payload = {
         "id": book_id
     }
@@ -67,10 +67,11 @@ def download_txt(filename, book_path, book_id):
     response.raise_for_status()
     if response.is_redirect:
         raise requests.HTTPError
-    book = response.content
 
-    path_to_file = Path(book_path, filename)
-    with open(file=f"{path_to_file}.txt", mode="wb") as file:
+    book = response.text
+    path_to_file = Path(book_path, title)
+
+    with open(file=f"{path_to_file}.txt", mode="w") as file:
         file.write(book)
 
 
