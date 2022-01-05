@@ -8,6 +8,7 @@ from pprint import pprint
 from tqdm import tqdm
 import argparse
 import requests
+import os
 
 
 def get_page_content(book_id, url):
@@ -22,24 +23,6 @@ def get_page_content(book_id, url):
     page_content = BeautifulSoup(response.text, 'lxml')
 
     return page_content
-
-
-def parse_book_comments(page_content):
-
-    comments = page_content.find("div", {"id": "content"}).find_all("span", {"class": "black"})
-    if comments:
-        comments = [html.document_fromstring(str(comment)).text_content() for comment in comments]
-
-    return comments
-
-
-def parse_book_author(page_content):
-
-    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
-    book_author = 1
-    author = header[book_author].strip()
-
-    return author
 
 
 def parse_book_title(page_content):
@@ -58,24 +41,13 @@ def parse_cover_link(page_content, url):
     return f"{url}{cover_link}"
 
 
-def parse_genre(page_content):
-
-    genres = page_content.select("#content > span >a")
-    genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
-
-    return genres
-
-
 def download_books_covers(cover_link, covers_path):
 
-    address = cover_link
-    book_id = 2
-    response = requests.get(address)
+    book_title_index = 1
+    response = requests.get(cover_link)
     response.raise_for_status()
-
-    cover_name = urlparse(cover_link).path.split("/")[book_id]
-
-    path_to_file = PurePath(covers_path, cover_name)
+    cover_name = os.path.split(cover_link)[book_title_index]
+    path_to_file = Path(covers_path, cover_name)
 
     if not Path(path_to_file).is_file():
         with open(file=path_to_file, mode="wb") as file:
@@ -92,19 +64,30 @@ def download_txt(url, filename, book_path, book_id):
         raise requests.HTTPError
     book = response.content
 
-    path_to_file = PurePath(book_path, filename)
+    path_to_file = Path(book_path, filename)
     with open(file=f"{path_to_file}.txt", mode="wb") as file:
         file.write(book)
 
 
-def collect_book_info(title, author, cover_link, comments, genre):
+def collect_book_info(title, cover_link, page_content):
+
+    comments = page_content.find("div", {"id": "content"}).find_all("span", {"class": "black"})
+    if comments:
+        comments = [html.document_fromstring(str(comment)).text_content() for comment in comments]
+
+    genres = page_content.select("#content > span >a")
+    genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
+
+    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
+    book_author = 1
+    author = header[book_author].strip()
 
     book_info = {
         title: {
             "author": author,
             "cover_link": cover_link,
             "comments": comments,
-            "genre": genre
+            "genres": genres
         }
     }
 
@@ -144,14 +127,11 @@ def main():
         try:
             page_content = get_page_content(book_id, url)
             title = parse_book_title(page_content)
-            author = parse_book_author(page_content)
-            genre = parse_genre(page_content)
-            comments = parse_book_comments(page_content)
             cover_link = parse_cover_link(page_content, url)
             download_txt(url, title, book_path, book_id)
             download_books_covers(cover_link, covers_path)
             if args.show_info:
-                pprint(collect_book_info(title, author, cover_link, comments, genre), width=150)
+                pprint(collect_book_info(title, cover_link, page_content), width=150)
         except requests.HTTPError:
             continue
 
