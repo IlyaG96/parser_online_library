@@ -1,6 +1,5 @@
 from pathvalidate import sanitize_filename
-from pathlib import Path, PurePath
-from urllib.parse import urlparse
+from pathlib import Path
 from bs4 import BeautifulSoup
 from environs import Env
 from lxml import html
@@ -11,9 +10,9 @@ import requests
 import os
 
 
-def get_page_content(book_id, url):
+def get_page_content(book_id):
 
-    address = f"{url}/b{book_id}/"
+    address = f"http://tululu.org/b{book_id}/"
     response = requests.get(address, verify=False, allow_redirects=False)
     response.raise_for_status()
 
@@ -34,11 +33,11 @@ def parse_book_title(page_content):
     return title
 
 
-def parse_cover_link(page_content, url):
+def parse_cover_link(page_content):
 
     cover_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
 
-    return f"{url}{cover_link}"
+    return f"http://tululu.org{cover_link}"
 
 
 def download_books_covers(cover_link, covers_path):
@@ -54,11 +53,17 @@ def download_books_covers(cover_link, covers_path):
             file.write(response.content)
 
 
-def download_txt(url, filename, book_path, book_id):
+def download_txt(filename, book_path, book_id):
 
     filename = sanitize_filename(filename)
-    address = f"{url}/txt.php?id={book_id}"
-    response = requests.get(address, verify=False, allow_redirects=False)
+    payload = {
+        "id": book_id
+    }
+    address = f"http://tululu.org/txt.php"
+    response = requests.get(address,
+                            params=payload,
+                            verify=False,
+                            allow_redirects=False)
     response.raise_for_status()
     if response.is_redirect:
         raise requests.HTTPError
@@ -99,7 +104,6 @@ def main():
     env.read_env()
     book_path = env.str("book_path", default="./books")
     covers_path = env.str("covers_path", default="./covers")
-    url = "http://tululu.org"
 
     Path(book_path).mkdir(parents=True, exist_ok=True)
     Path(covers_path).mkdir(parents=True, exist_ok=True)
@@ -125,10 +129,10 @@ def main():
     for book_id in range(args.start_id, args.stop_id):
         progress_bar.update(1)
         try:
-            page_content = get_page_content(book_id, url)
+            page_content = get_page_content(book_id)
             title = parse_book_title(page_content)
-            cover_link = parse_cover_link(page_content, url)
-            download_txt(url, title, book_path, book_id)
+            cover_link = parse_cover_link(page_content)
+            download_txt(title, book_path, book_id)
             download_books_covers(cover_link, covers_path)
             if args.show_info:
                 pprint(collect_book_info(title, cover_link, page_content), width=150)
