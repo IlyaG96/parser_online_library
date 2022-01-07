@@ -24,12 +24,12 @@ def get_page_content(book_id):
     return page_content
 
 
-def download_books_covers(cover_link, covers_path):
+def download_covers(cover_link, covers_path):
 
-    book_title_index = 1
     response = requests.get(cover_link)
     response.raise_for_status()
-    cover_name = os.path.split(cover_link)[book_title_index]
+
+    cover_name = os.path.split(cover_link)[1]
     path_to_file = Path(covers_path, cover_name)
 
     if not path_to_file.is_file():
@@ -70,7 +70,7 @@ def collect_book_info(page_content):
     genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
 
     header = page_content.find("div", {"id": "content"}).find("h1").text.split("::")
-    title, author = [sanitize_filename(word.strip()) for word in header]
+    title, author = [sanitize_filename(element.strip()) for element in header]
 
     cover_link = page_content.find("div", {"class": "bookimage"}).find("img")["src"]
     cover_link = f"http://tululu.org{cover_link}"
@@ -119,7 +119,7 @@ def main():
             title = "".join(list(book_info.keys()))
             cover_link = book_info[title]["cover_link"]
             download_txt(title, book_path, book_id)
-            download_books_covers(cover_link, covers_path)
+            download_covers(cover_link, covers_path)
             if args.v:
                 pprint(book_info, width=150)
         except requests.HTTPError:
