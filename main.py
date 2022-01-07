@@ -19,16 +19,9 @@ def get_page_content(book_id):
     if response.is_redirect:
         raise requests.HTTPError
 
-    page_content = BeautifulSoup(response.text, 'lxml')
+    page_content = BeautifulSoup(response.text, "lxml")
 
     return page_content
-
-
-def parse_book_title(page_content):
-
-
-
-    return title
 
 
 def download_books_covers(cover_link, covers_path):
@@ -76,17 +69,11 @@ def collect_book_info(page_content):
     genres = page_content.select("#content > span >a")
     genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
 
-    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
-    book_author_index = 1
-    author = header[book_author_index].strip()
+    header = page_content.find("div", {"id": "content"}).find("h1").text.split("::")
+    title, author = [sanitize_filename(word.strip()) for word in header]
 
-    cover_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
+    cover_link = page_content.find("div", {"class": "bookimage"}).find("img")["src"]
     cover_link = f"http://tululu.org{cover_link}"
-
-    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
-    book_title_index = 0
-    title = header[book_title_index].strip()
-    title = sanitize_filename(title)
 
     book_info = {
         title: {
@@ -96,7 +83,6 @@ def collect_book_info(page_content):
             "genres": genres
         }
     }
-
     return book_info
 
 
@@ -109,21 +95,19 @@ def main():
     Path(book_path).mkdir(parents=True, exist_ok=True)
     Path(covers_path).mkdir(parents=True, exist_ok=True)
 
-    parser = argparse.ArgumentParser(description='Введите id книг (начальный и конечный)')
-    parser.add_argument('start_id',
-                        help='Номер (id) первой книги',
+    parser = argparse.ArgumentParser(description="Введите id книг (начальный и конечный)")
+    parser.add_argument("start_id",
+                        help="Номер (id) первой книги",
                         type=int,
                         default=1,
-                        nargs='?')
-    parser.add_argument('stop_id',
-                        help='Номер (id) последней книги',
+                        nargs="?")
+    parser.add_argument("stop_id",
+                        help="Номер (id) последней книги",
                         type=int,
                         default=11,
-                        nargs='?')
-    parser.add_argument('-v',
-                        '--show',
+                        nargs="?")
+    parser.add_argument('-v', action="store_true",
                         help='отображение информации о книге',
-                        type=bool,
                         default=False)
     args = parser.parse_args()
     progress_bar = tqdm(total=args.stop_id-args.start_id)
@@ -132,15 +116,15 @@ def main():
         try:
             page_content = get_page_content(book_id)
             book_info = collect_book_info(page_content)
-            title = book_info["title"]
-            cover_link = book_info["cover_link"]
+            title = "".join(list(book_info.keys()))
+            cover_link = book_info[title]["cover_link"]
             download_txt(title, book_path, book_id)
             download_books_covers(cover_link, covers_path)
-            if args.show:
+            if args.v:
                 pprint(book_info, width=150)
         except requests.HTTPError:
             continue
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
