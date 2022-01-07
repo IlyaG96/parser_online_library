@@ -26,19 +26,9 @@ def get_page_content(book_id):
 
 def parse_book_title(page_content):
 
-    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
-    book_title_index = 0
-    title = header[book_title_index].strip()
-    title = sanitize_filename(title)
+
 
     return title
-
-
-def parse_cover_link(page_content):
-
-    cover_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
-
-    return f"http://tululu.org{cover_link}"
 
 
 def download_books_covers(cover_link, covers_path):
@@ -72,19 +62,12 @@ def download_txt(title, book_path, book_id):
     book_title = f"{title}.txt"
     path_to_file = Path(book_path, book_title)
 
-    with open(file=path_to_file, mode="w") as file:
-        file.write(book)
+    if not path_to_file.is_file():
+        with open(file=path_to_file, mode="w") as file:
+            file.write(book)
 
 
-def is_book_exist(title, book_path):
-
-    book_title = f"{title}.txt"
-    path_to_book = Path(book_path, book_title)
-
-    return path_to_book.is_file()
-
-
-def collect_book_info(title, cover_link, page_content):
+def collect_book_info(page_content):
 
     comments = page_content.find("div", {"id": "content"}).find_all("span", {"class": "black"})
     if comments:
@@ -96,6 +79,14 @@ def collect_book_info(title, cover_link, page_content):
     header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
     book_author_index = 1
     author = header[book_author_index].strip()
+
+    cover_link = page_content.find("div", {"class": "bookimage"}).find('img')['src']
+    cover_link = f"http://tululu.org{cover_link}"
+
+    header = page_content.find("div", {"id": "content"}).find('h1').text.split("::")
+    book_title_index = 0
+    title = header[book_title_index].strip()
+    title = sanitize_filename(title)
 
     book_info = {
         title: {
@@ -140,14 +131,13 @@ def main():
         progress_bar.update(1)
         try:
             page_content = get_page_content(book_id)
-            title = parse_book_title(page_content)
-            if is_book_exist(title, book_path):
-                continue
-            cover_link = parse_cover_link(page_content)
+            book_info = collect_book_info(page_content)
+            title = book_info["title"]
+            cover_link = book_info["cover_link"]
             download_txt(title, book_path, book_id)
             download_books_covers(cover_link, covers_path)
             if args.show:
-                pprint(collect_book_info(title, cover_link, page_content), width=150)
+                pprint(book_info, width=150)
         except requests.HTTPError:
             continue
 
