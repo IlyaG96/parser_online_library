@@ -76,12 +76,12 @@ def collect_book_info(page_content):
     cover_link = f"http://tululu.org{cover_link}"
 
     book_info = {
-        title: {
+            "title": title,
             "author": author,
             "cover_link": cover_link,
             "comments": comments,
             "genres": genres
-        }
+
     }
     return book_info
 
@@ -116,8 +116,8 @@ def main():
         try:
             page_content = get_page_content(book_id)
             book_info = collect_book_info(page_content)
-            title = "".join(list(book_info.keys()))
-            cover_link = book_info[title]["cover_link"]
+            title = book_info["title"]
+            cover_link = book_info["cover_link"]
             download_txt(title, book_path, book_id)
             download_covers(cover_link, covers_path)
             if args.v:
