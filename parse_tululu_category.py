@@ -21,12 +21,12 @@ def get_page_content():
 
     page_content = BeautifulSoup(response.text, "lxml")
 
+    return page_content
+
+
+def get_book_links(page_content):
+
     links = page_content.select("#content>table>tr:nth-child(2)>td>a", href=True)
     base_url = "http://tululu.org/"
     book_links = [urljoin(base_url, str(link["href"])) for link in links]
     pprint(book_links)
-
-    return page_content
-
-
-get_page_content()
