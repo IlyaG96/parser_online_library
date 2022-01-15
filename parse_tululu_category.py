@@ -34,22 +34,23 @@ def get_books_ids(page_content):
     return book_links
 
 
-def download_book_pack(pages, book_path, covers_path):
-    for page in pages:
-        page_content = get_content(page)
-        books_ids = get_books_ids(page_content)
-        print(books_ids)
-        for book_id in books_ids:
-            try:
-                book_page_content = get_book_page_content(book_id)
-                book_info = collect_book_info(book_page_content)
-                write_book_info_to_json(book_info)
-                title = book_info["title"]
-                cover_link = book_info["cover_link"]
-                download_txt(title, book_path, book_id)
-                download_cover(cover_link, covers_path)
-            except requests.exceptions.HTTPError:
-                continue
+def download_txt_and_cover(book_id, book_info, covers_path, book_path):
+    title = book_info["title"]
+    cover_link = book_info["cover_link"]
+    download_txt(title, book_path, book_id)
+    download_cover(cover_link, covers_path)
+
+
+def download_book_pack(book_path, covers_path, books_ids):
+
+    for book_id in books_ids:
+        try:
+            book_page_content = get_book_page_content(book_id)
+            book_info = collect_book_info(book_page_content)
+            download_txt_and_cover(book_id, book_info, covers_path, book_path)
+            write_book_info_to_json(book_info)
+        except requests.exceptions.HTTPError:
+            continue
 
 
 def main():
@@ -63,7 +64,10 @@ def main():
     Path(covers_path).mkdir(parents=True, exist_ok=True)
 
     pages = range(1, 2)
-    download_book_pack(pages, book_path, covers_path)
+    for page in pages:
+        page_content = get_content(page)
+        books_ids = get_books_ids(page_content)
+        download_book_pack(book_path, covers_path, books_ids)
 
 
 if __name__ == '__main__':
