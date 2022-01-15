@@ -1,14 +1,15 @@
+from main import download_txt, download_cover, collect_book_info, get_book_page_content
 from pathlib import Path
 from bs4 import BeautifulSoup
 from environs import Env
 import argparse
 import requests
-from main import download_txt, download_cover, collect_book_info, get_book_page_content
 import json
 
 
 def write_book_info_to_json(book_info, json_path):
-    with open(file="books.json", mode="a") as file:
+    path_to_json = Path(json_path, "books.json")
+    with open(file=path_to_json, mode="a") as file:
         json.dump(book_info, file, ensure_ascii=False, indent=2)
 
 
@@ -94,7 +95,6 @@ def main():
                         nargs="?")
 
     args = parser.parse_args()
-    print(args)
 
     pages = range(args.start_page, args.stop_page)
 
