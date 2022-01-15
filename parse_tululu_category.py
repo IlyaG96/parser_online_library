@@ -9,6 +9,12 @@ import argparse
 import requests
 import os
 from main import download_txt, download_cover, collect_book_info, get_book_page_content
+import json
+
+
+def write_book_info_to_json(book_info):
+    with open(file="books.json", mode="a") as file:
+        json.dump(book_info, file, ensure_ascii=False, indent=2)
 
 
 def get_content(page):
@@ -37,6 +43,7 @@ def download_book_pack(pages, book_path, covers_path):
             try:
                 book_page_content = get_book_page_content(book_id)
                 book_info = collect_book_info(book_page_content)
+                write_book_info_to_json(book_info)
                 title = book_info["title"]
                 cover_link = book_info["cover_link"]
                 download_txt(title, book_path, book_id)
@@ -55,7 +62,7 @@ def main():
     Path(book_path).mkdir(parents=True, exist_ok=True)
     Path(covers_path).mkdir(parents=True, exist_ok=True)
 
-    pages = range(1, 3)
+    pages = range(1, 2)
     download_book_pack(pages, book_path, covers_path)
 
 
