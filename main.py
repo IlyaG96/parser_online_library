@@ -10,7 +10,7 @@ import requests
 import os
 
 
-def get_page_content(book_id):
+def get_book_page_content(book_id):
 
     address = f"http://tululu.org/b{book_id}/"
     response = requests.get(address, verify=False, allow_redirects=False)
@@ -24,7 +24,7 @@ def get_page_content(book_id):
     return page_content
 
 
-def download_covers(cover_link, covers_path):
+def download_cover(cover_link, covers_path):
 
     response = requests.get(cover_link)
     response.raise_for_status()
@@ -114,12 +114,12 @@ def main():
     for book_id in range(args.start_id, args.stop_id):
         progress_bar.update(1)
         try:
-            page_content = get_page_content(book_id)
+            page_content = get_book_page_content(book_id)
             book_info = collect_book_info(page_content)
             title = book_info["title"]
             cover_link = book_info["cover_link"]
             download_txt(title, book_path, book_id)
-            download_covers(cover_link, covers_path)
+            download_cover(cover_link, covers_path)
             if args.v:
                 pprint(book_info, width=150)
         except requests.HTTPError:
