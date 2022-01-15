@@ -59,7 +59,8 @@ def main():
     covers_path = env.str("covers_path", default="./covers")
     json_path = env.str("json_path", defaul="./json")
 
-    parser = argparse.ArgumentParser(description="Введите id книг (начальный и конечный)")
+    parser = argparse.ArgumentParser(
+        description="Введите начальную и конечную страницу для скачивания")
     parser.add_argument("start_page",
                         help="Номер первой страницы",
                         type=int,
