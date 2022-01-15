@@ -62,17 +62,17 @@ def download_txt(title, book_path, book_id):
 
 def collect_book_info(page_content):
 
-    comments = page_content.find("div", {"id": "content"}).find_all("span", {"class": "black"})
+    comments = page_content.select("#content > div.texts > span")
     if comments:
         comments = [html.document_fromstring(str(comment)).text_content() for comment in comments]
 
-    genres = page_content.select("#content > span >a")
+    genres = page_content.select("#content > span > a")
     genres = [html.document_fromstring(str(genre)).text_content() for genre in genres]
 
-    header = page_content.find("div", {"id": "content"}).find("h1").text.split("::")
+    header = page_content.select_one("#content > h1").text.split("::")
     title, author = [sanitize_filename(element.strip()) for element in header]
 
-    cover_link = page_content.find("div", {"class": "bookimage"}).find("img")["src"]
+    cover_link = page_content.select_one("div.bookimage > a > img")["src"]
     cover_link = f"http://tululu.org{cover_link}"
 
     book_info = {
@@ -81,8 +81,8 @@ def collect_book_info(page_content):
             "cover_link": cover_link,
             "comments": comments,
             "genres": genres
-
     }
+
     return book_info
 
 
