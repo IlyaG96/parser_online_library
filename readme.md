@@ -23,11 +23,14 @@ $ pip install -r requirements.txt
 ```bash
 book_path="full/path/to/the/folder/with/books"
 covers_path="full/path/to/the/folder/with/covers"
+json_path="full/path/to/the/folder/with/json"
 ```
 
 `book_path` - полный путь до папки, в которую планируется скачивать книги (по умолчанию `./books`)  
 `covers_path` - полный путь до папки, в которую планируется скачивать обложки (по умолчанию `./covers`)  
+`json_path` - полный путь до папки, в которую планируется скачивать обложки (по умолчанию `./json`)  
 
+## main.py
 
 Простейший способ запустить скрипт и скачать 8 книг и 6 обложек (не у всех книг есть обложки) -
 ```bash
@@ -47,3 +50,37 @@ $ python main.py -v 10 22
                          'cover_link': 'http://tululu.org/shots/15.jpg',
                          'genre': ['Политика', 'Публицистика', 'Экономика']}}
 ```
+
+## parse_tululu_category.py
+
+Простейший способ запустить скрипт и скачать примерно 75 книг жанра "фантастика" и 60 обложек (не у всех книг есть обложки):
+```bash
+$ python parse_tululu_category.py
+```
+Также скрипт может принимать до 7 аргументов:
+
+- `start_page` - начальная страница для скачивания (по умолчанию - 1)  
+- `stop_page` - конечная страница для скачивания (по умолчанию - 3)
+Пример запуска скрипта с аргументами `start_page` `stop_page`:  
+```shell
+python parse_tululu_category.py 2 11
+```
+Скрипт загрузит все возможные книги со второй по двенадцатую страницу.
+- `-book_path` - путь до папки с книгами (по умолчанию ./books)  
+- `-json_path` - путь до папки с JSON файлом (по умолчанию ./json)  
+- `-covers_path` - путь до папки с обложками (по умолчанию ./covers)  
+
+Пример запуска скрипта с аргументами `-book_path` и `-covers_path`:  
+```shell
+python parse_tululu_category.py -book_path /users/books -covers_path /users/covers
+```
+Скрипт загрузит все возможные книги с первой по вторую страницу и поместит обложки в папку `/users/covers`,
+книги в `/users/books`, а JSON файл либо в директорию из `.env` файла, либо в `./json`    
+
+- `skip_imgs` - не загружать обложки  
+- `skip_txt` - не загружать txt-файлы  
+Пример запуска скрипта с аргументом `-skip_imgs`:  
+```shell
+python parse_tululu_category.py -skip_imgs
+```
+Скрипт загрузит только текстовые файлы, обложки загружены не будут  
