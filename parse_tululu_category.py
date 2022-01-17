@@ -1,4 +1,4 @@
-from main import download_txt, download_cover, collect_book_info, get_book_page_content
+from parser_insruments import download_txt, download_cover, collect_book_info, get_book_page_content
 from pathlib import Path
 from bs4 import BeautifulSoup
 from environs import Env
@@ -23,6 +23,7 @@ def get_content(page):
     page_content = BeautifulSoup(response.text, "lxml")
 
     return page_content
+
 
 def get_last_page(page_content):
     pass
