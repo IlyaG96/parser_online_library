@@ -9,7 +9,7 @@ import json
 
 def write_book_info_to_json(book_info, json_path):
     file_path = Path(json_path, "books.json")
-    with open(file=file_path, mode="a") as file:
+    with open(file=file_path, mode="w") as file:
         json.dump(book_info, file, ensure_ascii=False, indent=2)
 
 
