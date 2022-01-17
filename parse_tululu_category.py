@@ -48,6 +48,7 @@ def download_txt_and_cover(book_id, book_info, covers_path, book_path, args):
 
 
 def parse_tululu_category(book_path, covers_path, args, json_path):
+    books = []
     if args.last_page:
         pages = range(args.start_page, int(args.last_page))
 
@@ -64,9 +65,11 @@ def parse_tululu_category(book_path, covers_path, args, json_path):
                 book_page_content = get_book_page_content(book_id)
                 book_info = collect_book_info(book_page_content)
                 download_txt_and_cover(book_id, book_info, covers_path, book_path, args)
-                write_book_info_to_json(book_info, json_path)
+                books.append(book_info)
             except requests.exceptions.HTTPError:
                 continue
+
+        write_book_info_to_json(books, json_path)
 
 
 def main():
