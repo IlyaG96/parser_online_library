@@ -17,6 +17,8 @@ def get_content(page):
     address = f"http://tululu.org/l55/{page}/"
     response = requests.get(address, verify=False, allow_redirects=False)
     response.raise_for_status()
+    if response.is_redirect:
+        raise requests.HTTPError
 
     page_content = BeautifulSoup(response.text, "lxml")
 
@@ -93,7 +95,7 @@ def main():
                         type=str,
                         nargs="?")
     parser.add_argument('-covers_path',
-                        help='вручную определить путь к *.json файлу',
+                        help='вручную определить директорию для скачивания обложек книг',
                         default=covers_path,
                         type=str,
                         nargs="?")
