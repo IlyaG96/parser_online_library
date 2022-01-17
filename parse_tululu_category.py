@@ -38,15 +38,6 @@ def get_books_ids(page_content):
     return book_ids
 
 
-def download_txt_and_cover(book_id, book_info, covers_path, book_path, args):
-    title = book_info["title"]
-    cover_link = book_info["cover_link"]
-    if not args.skip_imgs:
-        download_cover(cover_link, covers_path)
-    if not args.skip_txt:
-        download_txt(title, book_path, book_id)
-
-
 def parse_tululu_category(book_path, covers_path, args, json_path):
     books = []
     if args.last_page:
@@ -64,7 +55,12 @@ def parse_tululu_category(book_path, covers_path, args, json_path):
             try:
                 book_page_content = get_book_page_content(book_id)
                 book_info = collect_book_info(book_page_content)
-                download_txt_and_cover(book_id, book_info, covers_path, book_path, args)
+                title = book_info["title"]
+                cover_link = book_info["cover_link"]
+                if not args.skip_imgs:
+                    download_cover(cover_link, covers_path)
+                if not args.skip_txt:
+                    download_txt(title, book_path, book_id)
                 books.append(book_info)
             except requests.exceptions.HTTPError:
                 continue
