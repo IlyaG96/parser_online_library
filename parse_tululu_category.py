@@ -8,8 +8,8 @@ import json
 
 
 def write_book_info_to_json(book_info, json_path):
-    path_to_json = Path(json_path, "books.json")
-    with open(file=path_to_json, mode="a") as file:
+    file_path = Path(json_path, "books.json")
+    with open(file=file_path, mode="a") as file:
         json.dump(book_info, file, ensure_ascii=False, indent=2)
 
 
@@ -22,12 +22,15 @@ def get_content(page):
 
     return page_content
 
+def get_last_page(page_content):
+    pass
+
 
 def get_books_ids(page_content):
     links = page_content.select("#content>table>tr:nth-child(2)>td>a", href=True)
-    book_links = ["".join(filter(str.isdigit, link["href"])) for link in links]
+    book_ids = ["".join(filter(str.isdigit, link["href"])) for link in links]
 
-    return book_links
+    return book_ids
 
 
 def download_txt_and_cover(book_id, book_info, covers_path, book_path, args):
@@ -39,7 +42,7 @@ def download_txt_and_cover(book_id, book_info, covers_path, book_path, args):
         download_txt(title, book_path, book_id)
 
 
-def start_parsing(book_path, covers_path, books_ids, args, json_path):
+def parse_tululu_category(book_path, covers_path, books_ids, args, json_path):
 
     for book_id in books_ids:
         try:
@@ -106,7 +109,7 @@ def main():
     for page in pages:
         page_content = get_content(page)
         books_ids = get_books_ids(page_content)
-        start_parsing(book_path, covers_path, books_ids, args, json_path)
+        parse_tululu_category(book_path, covers_path, books_ids, args, json_path)
 
 
 if __name__ == '__main__':
