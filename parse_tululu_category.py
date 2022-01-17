@@ -26,7 +26,9 @@ def get_content(page):
 
 
 def get_last_page(page_content):
-    pass
+    last_page_index = -1
+    last_page = page_content.select("#content > .center >.npage")[last_page_index].text
+    return last_page
 
 
 def get_books_ids(page_content):
@@ -45,16 +47,26 @@ def download_txt_and_cover(book_id, book_info, covers_path, book_path, args):
         download_txt(title, book_path, book_id)
 
 
-def parse_tululu_category(book_path, covers_path, books_ids, args, json_path):
+def parse_tululu_category(book_path, covers_path, args, json_path):
+    if args.last_page:
+        pages = range(args.start_page, int(args.last_page))
 
-    for book_id in books_ids:
-        try:
-            book_page_content = get_book_page_content(book_id)
-            book_info = collect_book_info(book_page_content)
-            download_txt_and_cover(book_id, book_info, covers_path, book_path, args)
-            write_book_info_to_json(book_info, json_path)
-        except requests.exceptions.HTTPError:
-            continue
+    else:
+        page_content = get_content(args.start_page)
+        last_page = get_last_page(page_content)
+        pages = range(args.start_page, int(last_page))
+
+    for page in pages:
+        page_content = get_content(page)
+        books_ids = get_books_ids(page_content)
+        for book_id in books_ids:
+            try:
+                book_page_content = get_book_page_content(book_id)
+                book_info = collect_book_info(book_page_content)
+                download_txt_and_cover(book_id, book_info, covers_path, book_path, args)
+                write_book_info_to_json(book_info, json_path)
+            except requests.exceptions.HTTPError:
+                continue
 
 
 def main():
@@ -72,47 +84,35 @@ def main():
                         type=int,
                         default=1,
                         nargs="?")
-    parser.add_argument("stop_page",
+    parser.add_argument("last_page",
                         help="Номер последней страницы",
-                        type=int,
-                        default=3,
                         nargs="?")
     parser.add_argument('-book_path',
                         help='Вручную определить директорию для скачивания книг',
                         default=book_path,
-                        type=str,
                         nargs="?")
     parser.add_argument('-skip_imgs',
                         action="store_true",
-                        help='не загружать картинки',
-                        default=False)
+                        help='не загружать картинки')
     parser.add_argument('-skip_txt',
                         action="store_true",
-                        help='не загружить txt книг',
-                        default=False)
+                        help='не загружить txt книг')
     parser.add_argument('-json_path',
                         help='вручную определить путь к *.json файлу',
                         default=json_path,
-                        type=str,
                         nargs="?")
     parser.add_argument('-covers_path',
                         help='вручную определить директорию для скачивания обложек книг',
                         default=covers_path,
-                        type=str,
                         nargs="?")
 
     args = parser.parse_args()
-
-    pages = range(args.start_page, args.stop_page)
 
     Path(args.book_path).mkdir(parents=True, exist_ok=True)
     Path(args.covers_path).mkdir(parents=True, exist_ok=True)
     Path(args.json_path).mkdir(parents=True, exist_ok=True)
 
-    for page in pages:
-        page_content = get_content(page)
-        books_ids = get_books_ids(page_content)
-        parse_tululu_category(book_path, covers_path, books_ids, args, json_path)
+    parse_tululu_category(book_path, covers_path, args, json_path)
 
 
 if __name__ == '__main__':
