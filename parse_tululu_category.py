@@ -13,7 +13,7 @@ def write_book_info_to_json(book_info, json_path):
         json.dump(book_info, file, ensure_ascii=False, indent=2)
 
 
-def get_content(page):
+def get_page_content(page=1):
     address = f"http://tululu.org/l55/{page}/"
     response = requests.get(address, verify=False, allow_redirects=False)
     response.raise_for_status()
@@ -26,8 +26,7 @@ def get_content(page):
 
 
 def get_last_page(page_content):
-    last_page_index = -1
-    last_page = page_content.select("#content > .center >.npage")[last_page_index].text
+    last_page = page_content.select_one("#content > .center >.npage:last-child").text
     return last_page
 
 
@@ -40,16 +39,10 @@ def get_books_ids(page_content):
 
 def parse_tululu_category(book_path, covers_path, args, json_path):
     books = []
-    if args.last_page:
-        pages = range(args.start_page, int(args.last_page))
-
-    else:
-        page_content = get_content(args.start_page)
-        last_page = get_last_page(page_content)
-        pages = range(args.start_page, int(last_page))
+    pages = range(args.start_page, args.last_page)
 
     for page in pages:
-        page_content = get_content(page)
+        page_content = get_page_content(page)
         books_ids = get_books_ids(page_content)
         for book_id in books_ids:
             try:
@@ -65,7 +58,7 @@ def parse_tululu_category(book_path, covers_path, args, json_path):
             except requests.exceptions.HTTPError:
                 continue
 
-        write_book_info_to_json(books, json_path)
+    write_book_info_to_json(books, json_path)
 
 
 def main():
@@ -85,6 +78,8 @@ def main():
                         nargs="?")
     parser.add_argument("last_page",
                         help="Номер последней страницы",
+                        type=int,
+                        default=get_last_page(get_page_content()),
                         nargs="?")
     parser.add_argument('-book_path',
                         help='Вручную определить директорию для скачивания книг',
