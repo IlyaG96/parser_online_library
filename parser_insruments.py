@@ -56,13 +56,13 @@ def collect_book_info(page_content):
 
     cover_link = page_content.select_one("div.bookimage > a > img")["src"]
     cover_link = f"http://tululu.org{cover_link}"
-
     book_info = {
         "title": title,
         "author": author,
         "cover_link": cover_link,
         "comments": comments,
-        "genres": genres
+        "genres": genres,
+        "cover_name": os.path.split(cover_link)[1]
     }
 
     return book_info
